@@ -1,9 +1,9 @@
 /**
  * WaveformRing — the central visual element of the call interface.
  *
- * idle:       Soft cream circle, "A" monogram, calm
+ * idle:       Soft blush gradient circle, "A" monogram, warm glow
  * connecting: Gentle breathing pulse, terracotta ring
- * active:     Three ripple rings radiate outward
+ * active:     Three ripple rings radiate outward, terra gradient fill
  * speaking:   Seven animated waveform bars below the ring
  */
 
@@ -39,12 +39,37 @@ export default function WaveformRing({ callStatus, isSpeaking, volumeLevel }) {
   const isConnecting = callStatus === 'connecting';
   const isActive     = callStatus === 'active';
   const isEnded      = callStatus === 'ended';
+  const isIdle       = callStatus === 'idle';
+
+  const circleBackground = isActive
+    ? 'linear-gradient(145deg, #d4886a 0%, #c4785a 50%, #a85e40 100%)'
+    : isConnecting
+      ? '#DBA88F'
+      : isEnded
+        ? '#E8DDD5'
+        : 'linear-gradient(145deg, #fdf4ee 0%, #fdf9f4 58%, #ede0d8 100%)';
+
+  const circleShadow = isActive
+    ? '0 8px 32px rgba(196, 120, 90, 0.42), 0 2px 8px rgba(44, 36, 32, 0.14)'
+    : '0 4px 20px rgba(44, 36, 32, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.65)';
 
   return (
     <div className="flex flex-col items-center select-none">
 
       {/* Ring container */}
       <div className="relative flex items-center justify-center" style={{ width: 180, height: 180 }}>
+
+        {/* Warm glow — idle and ended states */}
+        {(isIdle || isEnded) && (
+          <div
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              inset: -28,
+              background: 'radial-gradient(circle, rgba(196, 120, 90, 0.13) 0%, transparent 65%)',
+              filter: 'blur(18px)',
+            }}
+          />
+        )}
 
         {/* Ripple rings — active call */}
         {isActive && (
@@ -85,20 +110,15 @@ export default function WaveformRing({ callStatus, isSpeaking, volumeLevel }) {
           `}
         />
 
-        {/* Main circle */}
+        {/* Main circle — gradient fill */}
         <div
-          className={`
-            relative z-10 rounded-full flex items-center justify-center
-            transition-all duration-700 shadow-sm
-            ${isActive
-              ? 'bg-terra shadow-terra/20 shadow-xl'
-              : isConnecting
-                ? 'bg-terra-mute'
-                : isEnded
-                  ? 'bg-cream-dark'
-                  : 'bg-cream-mid'}
-          `}
-          style={{ width: 112, height: 112 }}
+          className="relative z-10 rounded-full flex items-center justify-center transition-all duration-700"
+          style={{
+            width: 112,
+            height: 112,
+            background: circleBackground,
+            boxShadow: circleShadow,
+          }}
         >
           <span
             className={`

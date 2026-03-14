@@ -22,7 +22,7 @@ function BloomMark({ size = 36 }) {
 
 export default function Header() {
   return (
-    <header className="w-full border-b border-cream-dark bg-warm-white">
+    <header className="w-full border-b border-cream-dark/80 bg-cream">
       <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
 
         {/* Left — Practice identity */}

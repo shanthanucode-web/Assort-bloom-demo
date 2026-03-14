@@ -1,12 +1,23 @@
 import WaveformRing from './WaveformRing.jsx';
 
+// Small location pin icon
+function PinIcon() {
+  return (
+    <svg width="7" height="9" viewBox="0 0 7 9" fill="none" aria-hidden="true">
+      <path d="M3.5 0C1.57 0 0 1.57 0 3.5C0 5.88 3.5 9 3.5 9C3.5 9 7 5.88 7 3.5C7 1.57 5.43 0 3.5 0Z"
+            fill="#5A8B64" opacity="0.55" />
+      <circle cx="3.5" cy="3.5" r="1.2" fill="#FAF7F2" opacity="0.8" />
+    </svg>
+  );
+}
+
 // Status badge — small pill indicator
 function StatusBadge({ callStatus }) {
   const config = {
     idle: {
       label: 'Ready',
-      dot: 'bg-warm-gray',
-      pill: 'bg-cream-dark text-warm-gray',
+      dot: 'bg-sage animate-dot-pulse',
+      pill: 'bg-sage-light text-sage',
     },
     connecting: {
       label: 'Connecting…',
@@ -81,8 +92,9 @@ export default function CallInterface({
         {['Fort Walton Beach, FL', 'Jacksonville, FL'].map((loc) => (
           <span
             key={loc}
-            className="text-[10px] tracking-widest uppercase text-warm-gray font-body border border-cream-dark rounded-full px-3 py-1"
+            className="inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-warm-gray/70 font-body border border-cream-dark/70 rounded-full px-3 py-1.5"
           >
+            <PinIcon />
             {loc}
           </span>
         ))}
@@ -96,11 +108,14 @@ export default function CallInterface({
       />
 
       {/* Agent name & title */}
-      <div className="space-y-1">
-        <h1 className="font-display text-4xl font-medium text-warm-brown tracking-tight">
+      <div className="space-y-1.5">
+        <h1
+          className="font-display text-4xl font-medium tracking-wide"
+          style={{ color: '#3A2820' }}
+        >
           Amber
         </h1>
-        <p className="text-sm text-warm-gray font-body tracking-wide">
+        <p className="text-sm text-warm-gray/80 font-body tracking-widest uppercase" style={{ fontSize: '11px' }}>
           AI Scheduling Assistant
         </p>
       </div>
@@ -121,13 +136,16 @@ export default function CallInterface({
           <button
             onClick={isEnded ? onReset : onStart}
             className="
-              group relative inline-flex items-center gap-3
+              inline-flex items-center gap-3
               px-10 py-4 rounded-full font-body font-medium text-sm tracking-widest uppercase
-              bg-terra text-warm-white
-              hover:bg-terra-dark active:scale-95
-              transition-all duration-200 shadow-lg shadow-terra/25
-              hover:shadow-xl hover:shadow-terra/30
+              text-warm-white
+              hover:brightness-110 active:scale-95
+              transition-all duration-200
             "
+            style={{
+              background: 'linear-gradient(180deg, #d4886a 0%, #c4785a 45%, #b06245 100%)',
+              boxShadow: '0 6px 24px rgba(196, 120, 90, 0.38), 0 2px 8px rgba(44, 36, 32, 0.12)',
+            }}
           >
             <PhoneIcon />
             {isEnded ? 'Call Again' : 'Call Amber'}
@@ -168,7 +186,7 @@ export default function CallInterface({
 
       {/* Subtle call-to-action hint when idle */}
       {isIdle && (
-        <p className="text-[11px] text-warm-gray/60 font-body tracking-wide max-w-xs leading-relaxed">
+        <p className="text-[11px] text-warm-gray/55 font-body tracking-wide max-w-xs leading-relaxed">
           Click to connect directly with Amber, Bloom's AI scheduling assistant.
         </p>
       )}
