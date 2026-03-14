@@ -70,14 +70,16 @@ export function useVapi() {
     });
 
     vapi.on('error', (err) => {
-      // Ignore errors that fire as a side-effect of a normal assistant-ended call
-      if (callEndedRef.current) {
-        callEndedRef.current = false;
-        return;
-      }
-      console.error('VAPI error:', err);
-      setError(err?.message ?? 'Something went wrong. Please try again.');
-      setCallStatus('idle');
+      // Delay slightly — if call-end fires within 200ms this is a normal assistant hangup
+      setTimeout(() => {
+        if (callEndedRef.current) {
+          callEndedRef.current = false;
+          return;
+        }
+        console.error('VAPI error:', err);
+        setError(err?.message ?? 'Something went wrong. Please try again.');
+        setCallStatus('idle');
+      }, 200);
     });
 
     return () => {
