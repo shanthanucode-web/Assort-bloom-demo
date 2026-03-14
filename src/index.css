@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    font-family: 'Lato', system-ui, sans-serif;
+    background-color: #FAF7F2;
+    color: #2C2420;
+  }
+  * {
+    box-sizing: border-box;
+  }
+}
+
+/* Scrollbar styling for transcript */
+@layer utilities {
+  .scrollbar-warm::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-warm::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-warm::-webkit-scrollbar-thumb {
+    background-color: #E8DDD5;
+    border-radius: 2px;
+  }
+}
