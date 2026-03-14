@@ -77,7 +77,6 @@ export default function CallInterface({
   error,
   onStart,
   onEnd,
-  onReset,
 }) {
   const isIdle       = callStatus === 'idle';
   const isConnecting = callStatus === 'connecting';
@@ -134,7 +133,7 @@ export default function CallInterface({
       <div className="pt-2">
         {(isIdle || isEnded) && (
           <button
-            onClick={isEnded ? onReset : onStart}
+            onClick={onStart}
             className="
               inline-flex items-center gap-3
               px-10 py-4 rounded-full font-body font-medium text-sm tracking-widest uppercase
