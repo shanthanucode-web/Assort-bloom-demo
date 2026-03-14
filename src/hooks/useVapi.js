@@ -7,7 +7,8 @@ const ASSISTANT_ID = import.meta.env.VITE_VAPI_ASSISTANT_ID;
 // call status values: 'idle' | 'connecting' | 'active' | 'ended'
 
 export function useVapi() {
-  const vapiRef    = useRef(null);
+  const vapiRef       = useRef(null);
+  const callEndedRef  = useRef(false);
   const [callStatus,  setCallStatus]  = useState('idle');
   const [transcript,  setTranscript]  = useState([]);
   const [isSpeaking,  setIsSpeaking]  = useState(false);
@@ -26,6 +27,7 @@ export function useVapi() {
     });
 
     vapi.on('call-end', () => {
+      callEndedRef.current = true;
       setCallStatus('ended');
       setIsSpeaking(false);
       setVolumeLevel(0);
@@ -68,6 +70,11 @@ export function useVapi() {
     });
 
     vapi.on('error', (err) => {
+      // Ignore errors that fire as a side-effect of a normal assistant-ended call
+      if (callEndedRef.current) {
+        callEndedRef.current = false;
+        return;
+      }
       console.error('VAPI error:', err);
       setError(err?.message ?? 'Something went wrong. Please try again.');
       setCallStatus('idle');
@@ -87,6 +94,7 @@ export function useVapi() {
       setError('VITE_VAPI_ASSISTANT_ID is missing from your .env file.');
       return;
     }
+    callEndedRef.current = false;
     setCallStatus('connecting');
     setTranscript([]);
     setError(null);
