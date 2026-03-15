@@ -189,3 +189,154 @@ On the engineering side, the main decisions worth noting: keeping everything cli
 - A/B testing on Amber's opening line and call flow to optimize prospect engagement during demos
 - Multi-language support — Spanish is clinically relevant for any OB/GYN patient population
 - Analytics on demo engagement: which scenarios get run, call duration, how often prospects call back
+
+---
+
+## Hypothetical: Production Sales Demo Platform
+
+> What this tool would look like if Assort Health built and deployed it as an internal sales asset — used by AEs and SEs to run live demos with real prospects.
+
+---
+
+### Overview
+
+The production version of this demo is a multi-tenant, self-serve sales enablement platform. Sales engineers generate shareable demo links pre-configured for a specific prospect — practice type, specialty, patient personas, and voice persona — without touching code. Each link is scoped, trackable, and expires after use.
+
+The AI agent (Amber, or any configured persona) runs on VAPI with the assistant definition version-controlled and deployed programmatically. No configuration lives in a dashboard.
+
+---
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Browser (React)                   │
+│  Demo UI  ←→  VAPI Web SDK  ←→  VAPI Infrastructure │
+└───────────────────────┬─────────────────────────────┘
+                        │ REST
+              ┌─────────▼──────────┐
+              │   Backend API      │
+              │  (Node / Express)  │
+              │                    │
+              │ • Session tokens   │
+              │ • Call auth        │
+              │ • Usage limits     │
+              │ • Analytics events │
+              └─────────┬──────────┘
+                        │
+          ┌─────────────┼──────────────┐
+          ▼             ▼              ▼
+     PostgreSQL      Redis         VAPI API
+   (sessions,      (rate          (assistant
+    analytics)      limits)        management)
+```
+
+**Call initiation is proxied through the backend.** The browser never holds a long-lived VAPI key. Instead, on call start, it requests a scoped session token from the backend, which validates the demo link, checks rate limits, logs the session start, and returns a short-lived token for that call only.
+
+---
+
+### Demo Link Generation
+
+Sales engineers generate links from an internal admin UI or CLI:
+
+```bash
+assort demo create \
+  --practice "Bloom Women's Clinic" \
+  --specialty obgyn \
+  --persona amber \
+  --scenarios jessica,amanda,rachel \
+  --expires 7d \
+  --notify se@assort.health
+```
+
+Each link encodes a `demoId` that the backend resolves to:
+- Which VAPI assistant to use
+- Which patient scenarios to surface in the drawer
+- Which practice branding to render
+- Call limits (e.g., max 10 calls per link)
+
+---
+
+### Environment Variables (Production)
+
+| Variable | Description |
+|----------|-------------|
+| `VAPI_PRIVATE_KEY` | Server-side VAPI key for assistant management and call auth |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis for rate limiting and session state |
+| `JWT_SECRET` | Signs scoped session tokens issued to the browser |
+| `ADMIN_API_KEY` | Authenticates the demo link generation CLI/API |
+
+The browser receives only a short-lived JWT scoped to a single call session — no raw VAPI keys on the client.
+
+---
+
+### Post-Call Summary
+
+After each call, the backend receives the full transcript via VAPI webhook and runs a structured extraction pass:
+
+```json
+{
+  "patient": "Jessica Martinez",
+  "appointmentType": "Annual Well-Woman Exam + Mammogram",
+  "provider": "Dr. Hunter Graham-Bieber",
+  "location": "Fort Walton Beach",
+  "proposedDate": "Tuesday, March 17th at 10:00 AM",
+  "insuranceVerified": true,
+  "notes": "Patient confirmed mammogram overdue per family history recommendation."
+}
+```
+
+This summary surfaces in the UI immediately after the call ends — giving the SE something concrete to show the prospect ("here's what your patients would receive after every call").
+
+---
+
+### Analytics
+
+Every demo session emits events to an internal analytics pipeline:
+
+| Event | Captured Data |
+|-------|--------------|
+| `demo.started` | Demo link ID, SE name, practice type, timestamp |
+| `scenario.selected` | Which patient scenario was opened |
+| `call.started` | Session ID, VAPI call ID |
+| `call.ended` | Duration, who ended the call (agent vs. user) |
+| `call.completed` | Appointment type scheduled, whether red-flag routing triggered |
+| `demo.converted` | Marked manually by SE post-meeting |
+
+The internal dashboard surfaces: which scenarios prospects engage with most, average call duration by specialty, conversion rate from demo to next meeting, and which SEs run the most demos.
+
+---
+
+### Assistant Version Control
+
+The Amber assistant is defined in code, not the VAPI dashboard:
+
+```
+assistants/
+├── amber/
+│   ├── system-prompt.md       # Full system prompt
+│   ├── config.json            # Voice, model, temperature settings
+│   └── scenarios/
+│       ├── jessica-martinez.json
+│       ├── amanda-chen.json
+│       └── ...
+└── deploy.js                  # Pushes assistant config to VAPI via API
+```
+
+Deployments are gated: prompt changes go through PR review before being pushed to the production assistant ID. The staging assistant runs against the same UI via a `?env=staging` query param.
+
+---
+
+### Multi-Persona Support
+
+Different specialties use different assistant personas, each with specialty-specific clinical logic:
+
+| Persona | Specialty | Configured For |
+|---------|-----------|---------------|
+| Amber | OB/GYN | Prenatal care, well-woman, postpartum |
+| Jordan | Primary Care | Annual physicals, chronic condition management |
+| Casey | Orthopedics | Surgical consults, post-op follow-ups, PT referrals |
+| Morgan | Behavioral Health | Intake scheduling, therapy matching, crisis routing |
+
+Each persona has its own system prompt, voice selection, and scenario library. The demo UI renders the correct persona based on the `demoId` in the link.
