@@ -38,14 +38,15 @@ Each card in the drawer includes a suggested opening line the prospect can use t
 
 ## Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| **React 18** | UI component model and state management |
-| **Vite** | Dev server and build tooling |
-| **Tailwind CSS v3** | Utility-first styling with a custom warm color palette |
-| **`@vapi-ai/web` v2** | VAPI Web SDK — manages WebRTC call lifecycle, speech events, and transcript streaming |
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **React** | 18.3 | UI component model and state management |
+| **Vite** | 6.0 | Dev server and production build tooling |
+| **Tailwind CSS** | 3.4 | Utility-first styling with a custom warm botanical color palette |
+| **`@vapi-ai/web`** | 2.0 | VAPI Web SDK — WebRTC call lifecycle, speech events, real-time transcript streaming |
+| **Vercel** | — | Production hosting with automatic deploys from `main` |
 
-No backend. The app communicates directly with VAPI's infrastructure from the browser using a public API key.
+No backend. The app talks directly to VAPI's infrastructure from the browser. Vite bakes the public API key into the bundle at build time via `import.meta.env`.
 
 ---
 
